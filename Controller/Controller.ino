@@ -41,8 +41,13 @@ RF24 radio(9,10);
 */
 struct dataStruct{
   unsigned long _micros;
-  float value;
-  float health;
+  float AccX;
+  float AccY;
+  float AccZ;
+  float GiroX;
+  float GiroY;
+  float GiroZ;
+  float Button;
 }myData;
 
 void setup() {
@@ -93,8 +98,12 @@ void loop() {
 /****************** Ping Out Role ***************************/  
     radio.stopListening();                                    // First, stop listening so we can talk.
 
-      myData.value = ay;
-      myData.health = ax;
+      myData.AccY = ay;
+      myData.AccX = ax;
+      myData.AccZ = az;
+      myData.GiroX = gx;
+      myData.GiroY = gy;
+      myData.GiroZ = gz;
     
     Serial.println(F("Now sending"));
 
@@ -130,7 +139,7 @@ void loop() {
         Serial.print(F(", Round-trip delay "));
         Serial.print(time-myData._micros);
         Serial.print(F(" microseconds Value "));
-        Serial.println(myData.value);
+        Serial.println(myData.Button);
     }
 
     // Try again 1s later
