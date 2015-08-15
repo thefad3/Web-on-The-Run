@@ -6,8 +6,21 @@
 */
 #include <SPI.h>
 #include "RF24.h"
+#include "I2Cdev.h"
+#include "MPU6050.h"
 
+MPU6050 accelgyro;
+
+
+int16_t ax, ay, az;
+int16_t gx, gy, gz;
+
+
+#define OUTPUT_READABLE_ACCELGYRO
 byte addresses[][6] = {"1Node","2Node"};
+#if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
+    #include "Wire.h"
+#endif
 
 
 
@@ -37,7 +50,7 @@ void setup() {
   radio.begin();
 
   Serial.begin(115200);
-
+  accelgyro.initialize();
 
   // Set the PA Level low to prevent power supply related issues since this is a
  // getting_started sketch, and the likelihood of close proximity of the devices. RF24_PA_MAX is default.
@@ -62,13 +75,26 @@ void setup() {
 
 
 void loop() {
+  accelgyro.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
   
+    #ifdef OUTPUT_READABLE_ACCELGYRO
+        
+        radio.setPALevel(RF24_PA_LOW);
+        // display tab-separated accel/gyro x/y/z values
+        Serial.print("a/g:\t");
+        Serial.print(ax); Serial.print("\t");
+        Serial.print(ay); Serial.print("\t");
+        Serial.print(az); Serial.print("\t");
+        Serial.print(gx); Serial.print("\t");
+        Serial.print(gy); Serial.print("\t");
+        Serial.println(gz);
+    
  
 /****************** Ping Out Role ***************************/  
     radio.stopListening();                                    // First, stop listening so we can talk.
 
-      myData.value = 1.22;
-      myData.health = 9000;
+      myData.value = ay;
+      myData.health = ax;
     
     Serial.println(F("Now sending"));
 
@@ -109,7 +135,7 @@ void loop() {
 
     // Try again 1s later
     delay(1000);
-
+#endif
 
 
 } // Loop
