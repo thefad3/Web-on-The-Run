@@ -30,8 +30,13 @@ bool role = 0;
 */
 struct dataStruct{
   unsigned long _micros;
-  float value;
-  float health;
+  float AccX;
+  float AccY;
+  float AccZ;
+  float GiroX;
+  float GiroY;
+  float GiroZ;
+  float Button;
 }myData;
 
 void setup() {
@@ -55,7 +60,7 @@ void setup() {
     radio.openReadingPipe(1,addresses[1]);
   }
   
-  myData.value = 1.22;
+  
   // Start the radio listening for data
   radio.startListening();
 }
@@ -106,7 +111,7 @@ if (role == 1)  {
         Serial.print(F(", Round-trip delay "));
         Serial.print(time-myData._micros);
         Serial.print(F(" microseconds Value "));
-        Serial.println(myData.value);
+        
     }
 
     // Try again 1s later
@@ -127,38 +132,25 @@ if (role == 1)  {
       }
      
       radio.stopListening();                               // First, stop listening so we can talk  
-      myData.value += 0.01;                                // Increment the float value
+      myData.Button = 1;
+      
+      
       radio.write( &myData, sizeof(myData) );              // Send the final one back.      
       radio.startListening();                              // Now, resume listening so we catch the next packets.     
       Serial.print(F("Sent response "));
       Serial.print(myData._micros);  
-      Serial.print(" : ");
-      Serial.println(myData.value);
-      Serial.print("Health: ");
-      Serial.println(myData.health);
+      Serial.print("Button: ");
+      Serial.println(myData.Button);
+      Serial.print("AccX: ");
+      Serial.println(myData.AccX);
+      Serial.print("AccY: ");
+      Serial.println(myData.AccY);
+      Serial.print("AccZ: ");
+      Serial.println(myData.AccZ);
    }
  }
 
 
-
-
-/****************** Change Roles via Serial Commands ***************************/
-
-  if ( Serial.available() )
-  {
-    char c = toupper(Serial.read());
-    if ( c == 'T' && role == 0 ){      
-      Serial.print(F("*** CHANGING TO TRANSMIT ROLE -- PRESS 'R' TO SWITCH BACK"));
-      role = 1;                  // Become the primary transmitter (ping out)
-    
-   }else
-    if ( c == 'R' && role == 1 ){
-      Serial.println(F("*** CHANGING TO RECEIVE ROLE -- PRESS 'T' TO SWITCH BACK"));      
-       role = 0;                // Become the primary receiver (pong back)
-       radio.startListening();
-       
-    }
-  }
 
 
 } // Loop

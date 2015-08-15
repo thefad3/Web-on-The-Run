@@ -1,13 +1,14 @@
-
-/*
-* Getting Started example sketch for nRF24L01+ radios
-* This is an example of how to send data from one node to another using data structures
-* Updated: Dec 2014 by TMRh20
-*/
 #include <SPI.h>
 #include "RF24.h"
 #include "I2Cdev.h"
 #include "MPU6050.h"
+
+
+//VCC Shorter One w/ Resistor
+//Red middle Pin 
+int redPin = 8;
+int greenPin = 7;
+
 
 MPU6050 accelgyro;
 
@@ -48,6 +49,8 @@ struct dataStruct{
 void setup() {
 
   radio.begin();
+  pinMode(redPin, OUTPUT);
+  pinMode(greenPin, OUTPUT);
 
   Serial.begin(115200);
   accelgyro.initialize();
@@ -94,7 +97,9 @@ void loop() {
     radio.stopListening();                                    // First, stop listening so we can talk.
 
       myData.value = ay;
-      myData.health = ax;
+      myData.health = 100;
+
+    
     
     Serial.println(F("Now sending"));
 
