@@ -4,9 +4,14 @@
 * This is an example of how to send data from one node to another using data structures
 * Updated: Dec 2014 by TMRh20
 */
-
+#include <RF24Network.h>
 #include <SPI.h>
+#include <MFRC522.h>
 #include "RF24.h"
+
+#define SS_PIN 6
+#define RST_PIN 5
+MFRC522 mfrc522(SS_PIN, RST_PIN);   // Create MFRC522 instance.
 
 byte addresses[][6] = {"1Node","2Node"};
 
@@ -17,6 +22,7 @@ bool radioNumber =1;
 
 /* Hardware configuration: Set up nRF24L01 radio on SPI bus plus pins 7 & 8 */
 RF24 radio(9,10);
+RF24Network network(radio);
 /**********************************************************/
 
 
@@ -63,14 +69,36 @@ void setup() {
   
   // Start the radio listening for data
   radio.startListening();
+
+    SPI.begin();            // Init SPI bus
+    mfrc522.PCD_Init(); // Init MFRC522 card
+    Serial.println("Scan PICC to see UID and type...");
 }
 
 
 
 
 void loop() {
-  
-  
+        
+    if ( ! mfrc522.PICC_IsNewCardPresent()) {
+        return;
+    }
+
+    // Select one of the cards
+    if ( ! mfrc522.PICC_ReadCardSerial()) {
+        return;
+    }
+
+      unsigned long UID_unsigned;
+      UID_unsigned =  mfrc522.uid.uidByte[0] << 24;
+      UID_unsigned += mfrc522.uid.uidByte[1] << 16;
+      UID_unsigned += mfrc522.uid.uidByte[2] <<  8;
+      UID_unsigned += mfrc522.uid.uidByte[3];
+    
+      String UID_string =  (String)UID_unsigned;
+    
+      Serial.println("UID String :");
+      Serial.println(UID_string);
 /****************** Ping Out Role ***************************/  
 if (role == 1)  {
     
@@ -100,7 +128,8 @@ if (role == 1)  {
         Serial.println(F("Failed, response timed out."));
     }else{
                                                                 // Grab the response, compare, and send to debugging spew
-        radio.read( &myData, sizeof(myData) );
+//        radio.read( &myData, sizeof(myData) );
+        radio.read( &myData, sizeof(&myData) );
         unsigned long time = micros();
         
         // Spew it
@@ -126,6 +155,7 @@ if (role == 1)  {
   {
     
     if( radio.available()){
+                                    
                                                            // Variable for the received timestamp
       while (radio.available()) {                          // While there is data ready
         radio.read( &myData, sizeof(myData) );             // Get the payload
@@ -148,6 +178,7 @@ if (role == 1)  {
       Serial.print("AccZ: ");
       Serial.println(myData.AccZ);
    }
+   
  }
 
 
