@@ -1,15 +1,13 @@
 __author__ = 'Chris Lynch'
-#!/usr/bin/env python
 
-import json
-import sys
-import atexit
-from firebase import firebase
+from carone import *
+from cartwo import *
 
-_firebase_name = 'mariocarts'
-firebase = firebase.FirebaseApplication('https://' + _firebase_name + '.firebaseio.com/', None)
+Car1 = CarOne()
+Car1.place('Yo momma so fat')
 
-test = firebase.put('/score', 'Car 1', {'testJson': 'Show me the Data'})
+Car2 = CarTwo()
+Car2.place('Yo momma Wicked Phat')
 
 if __name__ == '__main__':
     def __init__():
