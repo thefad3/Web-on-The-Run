@@ -3,11 +3,9 @@
 #include <RF24.h>
 #include <SPI.h>
 #include "I2Cdev.h"
-
 #include "MPU6050_6Axis_MotionApps20.h"
-#if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
-    #include "Wire.h"
-#endif
+#include "Wire.h"
+
 
 MPU6050 mpu;
 
@@ -21,7 +19,11 @@ uint8_t devStatus;      // return status after each device operation (0 = succes
 uint16_t packetSize;    // expected DMP packet size (default is 42 bytes)
 uint16_t fifoCount;     // count of all bytes currently in FIFO
 uint8_t fifoBuffer[64]; // FIFO storage buffer
-
+int16_t ax, ay, az;
+int16_t gx, gy, gz;
+int val;
+int prevVal;
+int acc;
 // orientation/motion vars
 Quaternion q;           // [w, x, y, z]         quaternion container
 VectorInt16 aa;         // [x, y, z]            accel sensor measurements
@@ -84,10 +86,10 @@ void setup() {
     // supply your own gyro offsets here, scaled for min sensitivity
     mpu.setXGyroOffset(80);
     mpu.setYGyroOffset(-22);
-    mpu.setZGyroOffset(-2);
+    mpu.setZGyroOffset(-3);
     mpu.setZAccelOffset(1019); // 1688 factory default for my test chip
-    mpu.setYAccelOffset(-2161); // 1688 factory default for my test chip
-    mpu.setXAccelOffset(1019); // 1688 factory default for my test chip
+    mpu.setYAccelOffset(-2166); // 1688 factory default for my test chip
+    mpu.setXAccelOffset(-3848); // 1688 factory default for my test chip
     // make sure it worked (returns 0 if so)
     if (devStatus == 0) {
         // turn on the DMP, now that it's ready
@@ -110,15 +112,6 @@ void setup() {
         Serial.println(F(")"));
     }
 }
-
-// How often to send 'hello world to the other unit
-const unsigned long interval = 2000; //ms
-
-// When did we last send?
-unsigned long last_sent;
-
-// How many have we sent already
-unsigned long packets_sent;
 
 // ================================================================
 // ===                    MAIN PROGRAM LOOP                     ===
@@ -169,30 +162,30 @@ void loop() {
         fifoCount -= packetSize;
 
 
+          mpu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
+          val = map(ay, -17000, 17000, 0, 179);
+          acc = map(ax, -17000, 17000, 0, 179);
+          if (val != prevVal)
+          {
+              Serial.print("Whute: ");
+              Serial.println(val);
+              prevVal = val;
+              Serial.print("Acceleration: ");
+              Serial.println(acc);
 
-            // display Euler angles in degrees
-            mpu.dmpGetQuaternion(&q, fifoBuffer);
-            mpu.dmpGetGravity(&gravity, &q);
-            mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
-            Serial.print("ypr\t");
-            Serial.print(ypr[0] * 180/M_PI);
-            Serial.print("\t");
-            Serial.print(ypr[1] * 180/M_PI);
-            Serial.print("\t");
-            Serial.println(ypr[2] * 180/M_PI);
-            int yaw = ypr[0] * 180/M_PI;
-            int pitch = ypr[1] * 180/M_PI;
-            int roll = ypr[2] * 180/M_PI;
-         
               delay(100);
               Serial.print("Sending...");
-              payload_t payload = { yaw, pitch, roll };
+              payload_t payload = { val, acc, 1337 };
               RF24NetworkHeader header(/*to node*/ other_node);
               bool ok = network.write(header,&payload,sizeof(payload));
               if (ok)
                 Serial.println("ok.");
               else
                 Serial.println("failed.");
+              
+          }
+          
+              
             
       
     
