@@ -163,12 +163,15 @@ if (role == 1)  {
      
       radio.stopListening();                               // First, stop listening so we can talk  
       myData.Button = 1;
+
+
+      
       
       
       radio.write( &myData, sizeof(myData) );              // Send the final one back.      
       radio.startListening();                              // Now, resume listening so we catch the next packets.     
       Serial.print(F("Sent response "));
-      Serial.print(myData._micros);  
+      Serial.println (myData._micros);  
       Serial.print("Button: ");
       Serial.println(myData.Button);
       Serial.print("AccX: ");
