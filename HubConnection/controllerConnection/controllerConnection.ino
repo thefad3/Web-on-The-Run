@@ -28,11 +28,25 @@ unsigned long packets_sent;          // How many have we sent already
 struct payload_t {                  // Structure of our payload
   unsigned long ms;
   unsigned long counter;
+  
+  //Player One Data (health, laps, powerup)
+  unsigned long p1h;
+  unsigned long p1l;
+  unsigned long p1p;
+  
+  //Player Two Data (health, laps, powerup)
+  unsigned long p2h;
+  unsigned long p2l;
+  unsigned long p2p;
 };
 
-unsigned int health;
-unsigned int laps;
-unsigned int powerups;
+unsigned int p1health;
+unsigned int p1laps;
+unsigned int p1powerups;
+
+unsigned int p2health;
+unsigned int p2laps;
+unsigned int p2powerups;
 
 int main(int argc, char** argv)
 {
@@ -52,9 +66,14 @@ int main(int argc, char** argv)
          network.read(header,&payload,sizeof(payload));
       
       printf("Received payload # %lu at %lu \n",payload.counter,payload.ms);
-      health = payload.counter;
-      laps = payload.ms;
-      powerups = "Lap 1 lolz";
+      //Player One Data Vars defined
+      p1health=77;
+      p1laps=payload.ms;
+      p1powerups=payload.counter;
+      //Player Two Data Vars defined
+      p2health=20;
+      p2laps=payload.ms;
+      p2powerups=payload.counter;
       
   CURL *curl;
   CURLcode res;
@@ -72,7 +91,7 @@ int main(int argc, char** argv)
         //Jon's teh fucking man for this
         
         stringstream ss;
-        ss << "health=" << health << "&laps=" << laps << "&powerups=" << powerups;
+        ss << "p1h=" << p1health << "&p1l=" << p1laps << "&p1p=" << p1powerups << "&p2h=" << p2health << "&p2l=" << p2laps << "&p2p=" << p2powerups;
         string s = ss.str();
         const char* cstr = s.c_str();
         curl_easy_setopt(curl, CURLOPT_POSTFIELDS, cstr);
