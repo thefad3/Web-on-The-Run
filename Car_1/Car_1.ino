@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2012 Victor Cabieles. <victorcabieles@gmail.com>
+ Copyright (C) 2015 Victor Cabieles. <victorcabieles@gmail.com>
 
  This program is NOT free software; you MAY NOT redistribute it and/or
  modify it.
