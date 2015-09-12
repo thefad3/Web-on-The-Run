@@ -11,6 +11,7 @@
 #include <SPI.h>
 #include <MFRC522.h>
 #include <Servo.h> 
+#include <stdlib.h>
 
 Servo drivingWheel;
 Servo esc;
@@ -21,24 +22,34 @@ MFRC522 mfrc522(SS_PIN, RST_PIN);   // Create MFRC522 instance.
 RF24 radio(9,10);                // nRF24L01(+) radio attached using Getting Started board 
 
 RF24Network network(radio);      // Network uses that radio
-const uint16_t this_node = 0;    // Address of our node
-const uint16_t other_node = 1;   // Address of the other node
+const uint16_t this_node = 01;    // Address of our node
+const uint16_t other_node = 001;   // Address of the other node
+const uint16_t hub_node = 0001;   // Address of Hub
 
 int fsrAnalogPin = 0; // FSR is connected to analog 0
 int fsrReading;      // the analog reading from the force sensitive resistor
+int lap=0;
+int lives=3;
+int randomDamage;
+int health=100;
+int enmDmg=0;
+int powerup;
 
+ 
     struct payload_t
     {
       int yaw;
       int pitch;
       int roll;
+      bool redButton; //Reset to 90 d
+      bool yellowButton; //Run
     };
 
-    struct payload_hub
+    struct payload_pOne
     {
-      int fsr;
-      String cardNumber;
-      int roll;
+      float health;
+      float lives;
+      float powerup;
     };
 
 
@@ -55,26 +66,49 @@ void setup(void)
 }
 
 void loop(void){
-  fsrReading = analogRead(fsrAnalogPin);
+ 
+  fsrReading = analogRead(fsrAnalogPin); 
   
-  network.update();                  // Check the network regularly
+      //Pressure Hit score reducer
+      if(fsrReading>450){
+        health-=7;
+      }
 
-  while ( network.available() ) {     // Is there anything ready for us?
-    
+        RF24NetworkHeader header(hub_node);
+        payload_pOne payload = {health, lives, lap};
+        bool ok = network.write(header,&payload,sizeof(payload));
+        
+  network.update();                  // Check the network regularly
+  while(network.available()){     // Is there anything ready for us?
     RF24NetworkHeader header;        // If so, grab it and print it out
     payload_t payload;
     network.read(header,&payload,sizeof(payload));
-    Serial.print("Received yaw # ");
-    Serial.println(payload.yaw);
-    Serial.print(" piych ");
-    Serial.print(payload.pitch);
-    Serial.print(" roll ");
-    Serial.print(payload.roll);
-    Serial.print("Analog reading = ");
-    Serial.println(fsrReading);
+//    Serial.print("Received yaw # ");
+//    Serial.println(payload.yaw);
+//    Serial.print(" piych ");
+//    Serial.print(payload.pitch);
+//    Serial.print(" roll ");
+//    Serial.print(payload.roll);
+//    Serial.print("Analog reading = ");
+    
+   
     drivingWheel.write(payload.yaw);
     esc.write(payload.pitch);
+
+
+
+
+    if(payload.yellowButton==1){
+      Serial.println("Yellow button");
+    }
     
+    if(payload.redButton==1){
+      Serial.println("Red Button");
+      payload.yaw=90;
+      delay(5000);
+    }
+
+
     if ( ! mfrc522.PICC_IsNewCardPresent()) {
         return;
     }
@@ -83,19 +117,43 @@ void loop(void){
     if ( ! mfrc522.PICC_ReadCardSerial()) {
         return;
     }
-
-      unsigned long UID_unsigned;
+    
+  unsigned long UID_unsigned;
   UID_unsigned =  mfrc522.uid.uidByte[0] << 24;
   UID_unsigned += mfrc522.uid.uidByte[1] << 16;
   UID_unsigned += mfrc522.uid.uidByte[2] <<  8;
   UID_unsigned += mfrc522.uid.uidByte[3];
-  
   String UID_string =  (String)UID_unsigned;
-  Serial.println("UID String :");
-  Serial.println(UID_string);
-  
 
+  //Powerup Here
+  if(UID_string){    
+    Serial.println(UID_string);
+    
+    if(UID_string == "20518"){
+      health-=20;
+    }
+    
+    if(UID_string == "27173"){
+      health+=20;
+    }
 
+    if(UID_string == "2853"){
+      Serial.println("fsdkjhfkjdhfkjsd");
+      delay(2000);
+    }
+    if(UID_string == "4294940993"){
+      
+    }
+
+    if(UID_string == "4294939457" || UID_string == "4294946881" || UID_string == "4294951233" || UID_string == "4294938709" || UID_string == "4294940481" || UID_string == "4294938433"){
+      lap++;
+      if(lap>=4){
+        lap=0;
+      }
+    }
+    
+  }
+    
     
   }
 }

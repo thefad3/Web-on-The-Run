@@ -8,6 +8,7 @@
 #include <string>
 #include <sstream>
 
+
 using namespace std;
 
 RF24 radio(RPI_V2_GPIO_P1_15, BCM2835_SPI_CS0, BCM2835_SPI_SPEED_8MHZ);  
@@ -15,29 +16,20 @@ RF24 radio(RPI_V2_GPIO_P1_15, BCM2835_SPI_CS0, BCM2835_SPI_SPEED_8MHZ);
 RF24Network network(radio);
 
 // Address of our node in Octal format
-const uint16_t this_node = 00;
+const uint16_t this_node = 0001;
 
 // Address of the other node in Octal format (01,021, etc)
-const uint16_t other_node = 01;
+//const uint16_t other_node = 01;
 
-const unsigned long interval = 2000; //ms  // How often to send 'hello world to the other unit
-
-unsigned long last_sent;             // When did we last send?
-unsigned long packets_sent;          // How many have we sent already
-
-struct payload_t {                  // Structure of our payload
-  unsigned long ms;
-  unsigned long counter;
-  
-  //Player One Data (health, laps, powerup)
-  unsigned long p1h;
-  unsigned long p1l;
-  unsigned long p1p;
-  
-  //Player Two Data (health, laps, powerup)
-  unsigned long p2h;
-  unsigned long p2l;
-  unsigned long p2p;
+struct payload_p {
+      float health;
+      float lives;
+      float powerup;
+};
+struct payload_two {
+      float health;
+      float lives;
+      float powerup;
 };
 
 unsigned int p1health;
@@ -50,30 +42,38 @@ unsigned int p2powerups;
 
 int main(int argc, char** argv)
 {
-  radio.begin();
-  delay(5);
-  network.begin(/*channel*/ 90, /*node address*/ this_node);
-  radio.printDetails();
+    radio.begin();
+    radio.setRetries(7,7);
+    delay(5);
+    network.begin(/*channel*/ 90, /*node address*/ this_node);
+    radio.printDetails();
 
   while(1)
   {
 
-      network.update();
-        while ( network.available() ) {     // Is there anything ready for us?
-          
-      RF24NetworkHeader header;        // If so, grab it and print it out
-         payload_t payload;
-         network.read(header,&payload,sizeof(payload));
+//      network.update();
+//      while ( network.available() )
+//      {
+        RF24NetworkHeader header;
+        network.peek(header);
       
-      printf("Received payload # %lu at %lu \n",payload.counter,payload.ms);
+      payload_p payload;
+      payload_two payloadTwo;
+         
+      network.read(header,&payload,sizeof(payload));
+      network.read(header,&payloadTwo,sizeof(payloadTwo));
+
+        
       //Player One Data Vars defined
-      p1health=77;
-      p1laps=payload.ms;
-      p1powerups=payload.counter;
+      p1health=payload.health;
+      p1laps=payload.lives;
+      p1powerups=payload.powerup;
+      
       //Player Two Data Vars defined
-      p2health=20;
-      p2laps=payload.ms;
-      p2powerups=payload.counter;
+      p2health=payloadTwo.health;
+      p2laps=payloadTwo.lives;
+      p2powerups=payloadTwo.powerup;
+
       
   CURL *curl;
   CURLcode res;
@@ -108,10 +108,8 @@ int main(int argc, char** argv)
     curl_easy_cleanup(curl);
   }
   curl_global_cleanup();
-  }     
+  //}     
      delay(2000);
   }
   return 0;
 }
-
-
