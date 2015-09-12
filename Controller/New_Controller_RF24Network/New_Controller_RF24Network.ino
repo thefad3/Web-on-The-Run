@@ -37,10 +37,10 @@ RF24 radio(9,10);
 // Network uses that radio
 RF24Network network(radio);
 // Address of our node
-const uint16_t this_node = 06;
+const uint16_t this_node = 1;
 
 // Address of the other node
-const uint16_t other_node = 02;
+const uint16_t other_node = 0;
 // ================================================================
 // ===               INTERRUPT DETECTION ROUTINE                ===
 // ================================================================
