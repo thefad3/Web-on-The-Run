@@ -1,5 +1,5 @@
 /*
- Copyright (C) 2015 Victor Cabieles. <victorcabieles@gmail.com>
+ Copyright (C) 2015 Victor Cabieles & Chris Lynch <victorcabieles@gmail.com, thefad3@gmail.com>
 
  This program is NOT free software; you MAY NOT redistribute it and/or
  modify it.
@@ -22,8 +22,8 @@ MFRC522 mfrc522(SS_PIN, RST_PIN);   // Create MFRC522 instance.
 RF24 radio(9,10);                // nRF24L01(+) radio attached using Getting Started board 
 
 RF24Network network(radio);      // Network uses that radio
-const uint16_t this_node = 0;    // Address of our node
-const uint16_t other_node = 1;   // Address of the other node
+const uint16_t this_node = 0100;    // Address of our node
+const uint16_t other_node = 1010;   // Address of the other node
 const uint16_t hub_node = 0001;   // Address of Hub
 
 int fsrAnalogPin = 0; // FSR is connected to analog 0
@@ -34,8 +34,7 @@ int randomDamage;
 int health=100;
 int enmDmg=0;
 int powerup;
-int SpeedControl;
- 
+
     struct payload_t
     {
       int yaw;
@@ -45,7 +44,7 @@ int SpeedControl;
       bool yellowButton; //Run
     };
 
-    struct payload_pOne
+    struct payload_pTwo
     {
       float health;
       float lives;
@@ -73,10 +72,11 @@ void loop(void){
       //Pressure Hit score reducer
       if(fsrReading>450){
         health-=7;
+        delay(2000);
       }
 
         RF24NetworkHeader header(hub_node);
-        payload_pOne payload = {health, lives, lap};
+        payload_pTwo payload = {health, lives, lap};
         bool ok = network.write(header,&payload,sizeof(payload));
         
   network.update();                  // Check the network regularly
@@ -84,30 +84,19 @@ void loop(void){
     RF24NetworkHeader header;        // If so, grab it and print it out
     payload_t payload;
     network.read(header,&payload,sizeof(payload));
-//    Serial.print("Received yaw # ");
-//    Serial.println(payload.yaw);
-//    Serial.print(" piych ");
-//    Serial.print(payload.pitch);
-//    Serial.print(" roll ");
-//    Serial.print(payload.roll);
-//    Serial.print("Analog reading = ");
-    Serial.print(payload.pitch);
-    
-    esc.write(payload.pitch);
-   
     drivingWheel.write(payload.yaw);
-    
-    
+    esc.write(payload.pitch);
+
     if(payload.yellowButton==1){
       Serial.println("Yellow button");
+      
     }
     
     if(payload.redButton==1){
       Serial.println("Red Button");
-      drivingWheel.write(80);
+      drivingWheel.write(90);
       delay(3000);
     }
-
 
     if ( ! mfrc522.PICC_IsNewCardPresent()) {
         return;
@@ -150,11 +139,8 @@ void loop(void){
       if(lap>=4){
         lap=0;
       }
-    }
-    
-  }
-    
-    
+    } 
+  } 
   }
 }
 

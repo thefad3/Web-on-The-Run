@@ -37,15 +37,15 @@ RF24 radio(9,10);
 // Network uses that radio
 RF24Network network(radio);
 // Address of our node
-const uint16_t this_node = 1;
+const uint16_t this_node = 01;
 
 // Address of the other node
-const uint16_t other_node = 0;
+const uint16_t other_node = 001;
 // ================================================================
 // ===               INTERRUPT DETECTION ROUTINE                ===
 // ================================================================
 
-volatile bool mpuInterrupt = false;     // indicates whether MPU interrupt pin has gone high
+volatile bool mpuInterrupt = false;     // ind icates whether MPU interrupt pin has gone high
 void dmpDataReady() {
     mpuInterrupt = true;
 }
@@ -58,6 +58,8 @@ void dmpDataReady() {
       int yaw;
       int pitch;
       int roll;
+      bool redButton; //Reset to 90 d
+      bool yellowButton; //Run
     };
 
 // ================================================================
@@ -172,22 +174,12 @@ void loop() {
               prevVal = val;
               Serial.print("Acceleration: ");
               Serial.println(acc);
-
               delay(100);
               Serial.print("Sending...");
               payload_t payload = { val, acc, 1337 };
               RF24NetworkHeader header(/*to node*/ other_node);
               bool ok = network.write(header,&payload,sizeof(payload));
-              if (ok)
-                Serial.println("ok.");
-              else
-                Serial.println("failed.");
-              
           }
-          
-              
-            
-      
     
     }
 }
